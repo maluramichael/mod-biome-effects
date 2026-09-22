@@ -1,0 +1,57 @@
+[worldserver]
+
+########################################
+# mod-biome-effects
+#
+# Zone-based passive auras for horizontal progression: entering certain zones applies a themed, hidden,
+# passive resistance aura ("biome"); leaving it (or entering a zone belonging to a different biome)
+# removes it and applies the new one instead. Only one biome aura is ever active at a time.
+#
+# The aura is carried by one of four passive, hidden, server-side spells (ids 200220-200223) created by
+# this module's SQL (data/sql/db-world/updates/mod_biome_effects_*.sql, applied by the DB updater on the
+# next world start). They need NO client patch and show no buff icon.
+#
+# v1 zone -> biome mapping (hard-coded in src/BiomeEffects.cpp, GetBiomeForZone()):
+#
+#   Biome     Resistance  Zones (WotLK zone IDs)
+#   --------  ----------  --------------------------------------------
+#   Frozen    Frost       1    Dun Morogh
+#                         617  Winterspring
+#   Volcanic  Fire        51   Searing Gorge
+#                         46   Burning Steppes
+#   Toxic     Nature      15   Swamp of Sorrows
+#                         490  Un'Goro Crater
+#   Arcane    Arcane      3523 Netherstorm
+#                         4080 Isle of Quel'Danas
+#
+# A couple of custom items (data/sql, entries 9000200-9000201) amplify a biome by granting the matching
+# resistance directly through the item's own template stats, stacking with the biome aura.
+########################################
+
+#
+#    BiomeEffects.Enable
+#        Description: Master switch. Setting it to 0 (and reloading / restarting) removes all biome
+#                     auras; existing ones are cleared as players change zone.
+#        Default:     1
+#
+
+BiomeEffects.Enable = 1
+
+#
+#    BiomeEffects.IncludeBots
+#        Description: Playerbots (altbots and random bots) also receive biome auras when they enter a
+#                     mapped zone. 0 = only real players are affected.
+#        Default:     1
+#
+
+BiomeEffects.IncludeBots = 1
+
+#
+#    BiomeEffects.ResistanceAmount
+#        Description: Flat resistance points granted by a biome aura (frost/fire/nature/arcane
+#                     resistance, matching the biome). Applied via AuraEffect::ChangeAmount, so it can be
+#                     tuned here without touching the DB.
+#        Default:     15
+#
+
+BiomeEffects.ResistanceAmount = 15
