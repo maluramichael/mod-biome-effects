@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <array>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 namespace
@@ -125,10 +126,36 @@ namespace
         sCfg.resistanceAmount = std::max(0, sConfigMgr->GetOption<int32>("BiomeEffects.ResistanceAmount", 15));
     }
 
+    // Bots are sessions without a socket. AzerothCore marks them with WorldSession::IsHeadless();
+    // older playerbots core forks have WorldSession::IsBot() instead, and older stock cores have
+    // neither. Looking for both at compile time lets the module build on all of them.
+    template <typename Session, typename = void>
+    struct HasIsHeadless : std::false_type { };
+
+    template <typename Session>
+    struct HasIsHeadless<Session, std::void_t<decltype(std::declval<Session&>().IsHeadless())>> : std::true_type { };
+
+    template <typename Session, typename = void>
+    struct HasIsBot : std::false_type { };
+
+    template <typename Session>
+    struct HasIsBot<Session, std::void_t<decltype(std::declval<Session&>().IsBot())>> : std::true_type { };
+
+    template <typename Session>
+    bool IsBotSession(Session* session)
+    {
+        if constexpr (HasIsHeadless<Session>::value)
+            return session->IsHeadless();
+        else if constexpr (HasIsBot<Session>::value)
+            return session->IsBot();
+        else
+            return false;
+    }
+
     bool IsBotPlayer(Player* player)
     {
         WorldSession* session = player->GetSession();
-        return session && session->IsBot();
+        return session && IsBotSession(session);
     }
 
     // Make sure spellId is on the player as a self-aura with its single effect set to `amount`.
